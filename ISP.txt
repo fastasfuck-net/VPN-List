@@ -2,3 +2,4 @@ GSLNETWORKS
 PACKETHUB-*
 NORDVPN-*
 WORLDSTREAM*
+Amazon Technologies Inc.*
