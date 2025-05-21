@@ -3,4 +3,3 @@ PACKETHUB-*
 NORDVPN-*
 WORLDSTREAM*
 Amazon Technologies Inc.*
-CHINANET-SH
