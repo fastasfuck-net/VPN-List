@@ -2,6 +2,6 @@ GSLNETWORKS*
 PACKETHUB*
 NORDVPN*
 WORLDSTREAM*
-Amazon Technologies Inc.*
 HETZNER*
 IONOS*
+Amazon*
