@@ -34,3 +34,4 @@ GOOGLE*
 CDN77*
 M247*
 ProtonVPN*
+CDNEXT*
