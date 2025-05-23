@@ -22,7 +22,7 @@ ROYALE-45-140-142-0
 DigitalOcean*
 IR-AYANDEH-GOSTAR-BASTAK
 IDNIC-MYRISE-ID
-Microsoft Corporation (MSFT)
+Microsoft*
 Alibaba Cloud*
 BITNIAGA-ID BITNIAGA-ID
 AE-ITEL
