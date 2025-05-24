@@ -39,3 +39,6 @@ UK-DATACAMP*
 AH-RS-NET
 OnShore*
 Oracle*
+AS-VULTR*
+VULTRIC*
+Contabo*
