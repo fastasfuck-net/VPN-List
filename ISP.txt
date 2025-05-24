@@ -38,3 +38,4 @@ CDNEXT*
 UK-DATACAMP*
 AH-RS-NET
 OnShore*
+Oracle*
