@@ -57,3 +57,5 @@ NET-31173-185-65-134
 FR-109-69-110-0
 The Constant Company*
 SCALEWAY
+HostPapa*
+Nexeon Technologies*
