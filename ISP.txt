@@ -60,3 +60,4 @@ SCALEWAY
 HostPapa*
 Nexeon Technologies*
 DATACAMP
+Strong Technology*
