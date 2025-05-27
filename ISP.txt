@@ -42,3 +42,4 @@ Oracle*
 AS-VULTR*
 VULTRIC*
 Contabo*
+LRZ-MUNICH-NET
