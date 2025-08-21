@@ -68,3 +68,7 @@ Clouvider*
 YHC-NET*
 PRIVATE LAYER*
 CLOUD-NBG*
+TencentCloud*
+Cloud*
+Server*
+
