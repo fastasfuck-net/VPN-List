@@ -72,3 +72,4 @@ TencentCloud*
 Cloud*
 Server*
 Host*
+KINXINC
