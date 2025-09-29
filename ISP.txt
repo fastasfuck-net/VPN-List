@@ -76,3 +76,4 @@ KINXINC*
 AKAMAI*
 ZSCALER*
 Byte Node*
+Perimeter*
