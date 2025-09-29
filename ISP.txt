@@ -79,3 +79,4 @@ Byte Node*
 Perimeter*
 NO-BLIX*
 XTOM*
+Fastly*
