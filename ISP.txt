@@ -84,3 +84,4 @@ EGIHosting*
 FIBER-BUSINESS-SUBNETS
 Data Bridge Limited*
 Cyber Data*
+Hayashimo*
