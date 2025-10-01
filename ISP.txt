@@ -82,3 +82,4 @@ XTOM*
 Fastly*
 EGIHosting*
 FIBER-BUSINESS-SUBNETS
+Data Bridge Limited*
