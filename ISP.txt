@@ -86,3 +86,4 @@ Data Bridge Limited*
 Cyber Data*
 Hayashimo*
 MULLVAD*
+BINBOX*
