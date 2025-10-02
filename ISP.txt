@@ -108,3 +108,4 @@ Interconnecx*
 KIRZ*
 DAOU DAOU*
 FILANCO*
+RadoreCloud
