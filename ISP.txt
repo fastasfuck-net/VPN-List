@@ -111,3 +111,4 @@ FILANCO*
 RadoreCloud
 RU-YANDEXCLOUD
 Zillion_Network*
+ANX-NET-*
