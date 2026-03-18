@@ -1,0 +1,135 @@
+name: Update Proxy Source IPs
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"   # alle 6 Stunden
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-proxies:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Download from all proxy sources
+        run: |
+          mkdir -p /tmp/proxy_sources
+
+          # --- proxifly: socks5, socks4, http ---
+          echo "[Source 1] proxifly..."
+          curl -sf "https://cdn.jsdelivr.net/gh/proxifly/free-proxy-list@main/proxies/protocols/socks5/data.txt" \
+            -o /tmp/proxy_sources/proxifly_socks5.txt || echo "" > /tmp/proxy_sources/proxifly_socks5.txt
+          curl -sf "https://cdn.jsdelivr.net/gh/proxifly/free-proxy-list@main/proxies/protocols/socks4/data.txt" \
+            -o /tmp/proxy_sources/proxifly_socks4.txt || echo "" > /tmp/proxy_sources/proxifly_socks4.txt
+          curl -sf "https://cdn.jsdelivr.net/gh/proxifly/free-proxy-list@main/proxies/protocols/http/data.txt" \
+            -o /tmp/proxy_sources/proxifly_http.txt || echo "" > /tmp/proxy_sources/proxifly_http.txt
+
+          # --- TheSpeedX: socks5, socks4, http ---
+          echo "[Source 2] TheSpeedX..."
+          curl -sf "https://raw.githubusercontent.com/TheSpeedX/PROXY-List/master/socks5.txt" \
+            -o /tmp/proxy_sources/speedx_socks5.txt || echo "" > /tmp/proxy_sources/speedx_socks5.txt
+          curl -sf "https://raw.githubusercontent.com/TheSpeedX/PROXY-List/master/socks4.txt" \
+            -o /tmp/proxy_sources/speedx_socks4.txt || echo "" > /tmp/proxy_sources/speedx_socks4.txt
+          curl -sf "https://raw.githubusercontent.com/TheSpeedX/PROXY-List/master/http.txt" \
+            -o /tmp/proxy_sources/speedx_http.txt || echo "" > /tmp/proxy_sources/speedx_http.txt
+
+          # --- monosans: socks5, socks4, http ---
+          echo "[Source 3] monosans..."
+          curl -sf "https://raw.githubusercontent.com/monosans/proxy-list/main/proxies/socks5.txt" \
+            -o /tmp/proxy_sources/monosans_socks5.txt || echo "" > /tmp/proxy_sources/monosans_socks5.txt
+          curl -sf "https://raw.githubusercontent.com/monosans/proxy-list/main/proxies/socks4.txt" \
+            -o /tmp/proxy_sources/monosans_socks4.txt || echo "" > /tmp/proxy_sources/monosans_socks4.txt
+          curl -sf "https://raw.githubusercontent.com/monosans/proxy-list/main/proxies/http.txt" \
+            -o /tmp/proxy_sources/monosans_http.txt || echo "" > /tmp/proxy_sources/monosans_http.txt
+
+          echo "[Sources] Download abgeschlossen."
+
+      - name: Extract & deduplicate IPs
+        run: |
+          # Alle Quelldateien zusammenführen und IPs extrahieren
+          # Unterstützt Formate: IP:PORT und socks5://IP:PORT
+          cat /tmp/proxy_sources/*.txt \
+            | grep -oE '([0-9]{1,3}\.){3}[0-9]{1,3}' \
+            | grep -E '^([0-9]{1,3}\.){3}[0-9]{1,3}$' \
+            | sort -u \
+            > /tmp/new_ips.txt
+
+          NEW_TOTAL=$(wc -l < /tmp/new_ips.txt)
+          echo "Unique IPs aus allen Quellen: $NEW_TOTAL"
+
+      - name: Check for duplicates & update IP.txt
+        run: |
+          touch IP.txt
+
+          # --- Duplikat-Check: alle bereits vorhandenen IPs aus IP.txt extrahieren ---
+          # Kommentarzeilen ignorieren, nur reine IPs
+          grep -v "^#" IP.txt \
+            | grep -oE '([0-9]{1,3}\.){3}[0-9]{1,3}' \
+            | sort -u \
+            > /tmp/existing_ips.txt
+
+          EXISTING=$(wc -l < /tmp/existing_ips.txt)
+          echo "Bereits vorhandene IPs in IP.txt: $EXISTING"
+
+          # --- Alte ProxySource-Einträge entfernen ---
+          grep -v "# ProxySource$" IP.txt > /tmp/ip_clean.txt || true
+
+          # --- Nur wirklich neue IPs (nicht in existing_ips) ---
+          # Bestehende nach dem Clean nochmal prüfen (manuell eingetragene IPs bleiben)
+          grep -v "^#" /tmp/ip_clean.txt \
+            | grep -oE '([0-9]{1,3}\.){3}[0-9]{1,3}' \
+            | sort -u \
+            > /tmp/existing_clean.txt
+
+          NEW_IPS=$(comm -23 \
+            <(sort /tmp/new_ips.txt) \
+            <(sort /tmp/existing_clean.txt))
+
+          NEW_COUNT=$(echo "$NEW_IPS" | grep -c . || true)
+          echo "Neue IPs die hinzugefügt werden: $NEW_COUNT"
+
+          if [ -n "$NEW_IPS" ] && [ "$NEW_COUNT" -gt 0 ]; then
+            while read -r ip; do
+              echo "$ip  # ProxySource"
+            done <<< "$NEW_IPS" >> /tmp/ip_clean.txt
+          fi
+
+          mv /tmp/ip_clean.txt IP.txt
+
+          # --- Duplikat-Report ---
+          DUPLICATES_FOUND=$(comm -12 \
+            <(sort /tmp/new_ips.txt) \
+            <(sort /tmp/existing_clean.txt) | wc -l)
+
+          echo ""
+          echo "=== Zusammenfassung ==="
+          echo "IPs aus Quellen:        $(wc -l < /tmp/new_ips.txt)"
+          echo "Bereits vorhanden:      $DUPLICATES_FOUND (übersprungen)"
+          echo "Neu hinzugefügt:        $NEW_COUNT"
+          echo "Gesamt IPs in IP.txt:   $(grep -v '^#' IP.txt | grep -c -oE '([0-9]{1,3}\.){3}[0-9]{1,3}' || true)"
+          echo "========================"
+
+      - name: Cleanup
+        run: rm -rf /tmp/proxy_sources /tmp/new_ips.txt /tmp/existing_ips.txt /tmp/existing_clean.txt
+
+      - name: Commit & Push if changed
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add IP.txt
+
+          if git diff --cached --quiet; then
+            echo "Keine Änderungen – kein Commit nötig."
+          else
+            TIMESTAMP=$(date -u "+%Y-%m-%d %H:%M UTC")
+            git commit -m "chore: update proxy source IPs (${TIMESTAMP})"
+            git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+          fi
