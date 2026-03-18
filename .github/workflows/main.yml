@@ -1,0 +1,119 @@
+name: Update ASN Lists
+
+on:
+  schedule:
+    - cron: "0 */12 * * *"   # alle 12 Stunden
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-asn:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Download X4BNet ASN list
+        run: |
+          echo "Downloading X4BNet datacenter ASN list..."
+
+          curl -sf \
+            "https://raw.githubusercontent.com/X4BNet/lists_vpn/refs/heads/main/input/datacenter/ASN.txt" \
+            --max-time 30 \
+            --retry 3 \
+            -o /tmp/x4bnet_raw.txt
+
+          echo "Downloaded $(wc -l < /tmp/x4bnet_raw.txt) lines"
+
+      - name: Parse ASNs from source
+        run: |
+          # Kommentare entfernen, nur gültige AS-Nummern behalten, deduplizieren
+          sed 's/#.*//' /tmp/x4bnet_raw.txt \
+            | tr -s ' \t' '\n' \
+            | grep -E '^AS[0-9]+$' \
+            | sort -u \
+            > /tmp/new_asns.txt
+
+          echo "Unique ASNs from source: $(wc -l < /tmp/new_asns.txt)"
+
+      - name: Remove old X4BNet entries & add new ones
+        run: |
+          touch ASN.txt
+
+          # Schritt 1: Alte github-asn-lists Einträge entfernen
+          grep -v "# github-asn-lists$" ASN.txt > /tmp/asn_base.txt || true
+
+          # Schritt 2: Bestehende ASNs (manuell) für Duplikat-Check extrahieren
+          grep -v "^#" /tmp/asn_base.txt \
+            | grep -oE 'AS[0-9]+' \
+            | sort -u \
+            > /tmp/existing_asns.txt
+
+          EXISTING=$(wc -l < /tmp/existing_asns.txt)
+          echo "Manual entries in ASN.txt: $EXISTING"
+
+          # Schritt 3: Nur ASNs hinzufügen die noch NICHT in der Basis sind
+          NEW_ASNS=$(comm -23 \
+            <(sort /tmp/new_asns.txt) \
+            <(sort /tmp/existing_asns.txt))
+
+          NEW_COUNT=$(echo "$NEW_ASNS" | grep -c . || true)
+          SKIPPED=$(comm -12 \
+            <(sort /tmp/new_asns.txt) \
+            <(sort /tmp/existing_asns.txt) | wc -l)
+
+          if [ -n "$NEW_ASNS" ] && [ "$NEW_COUNT" -gt 0 ]; then
+            while read -r asn; do
+              echo "$asn  # github-asn-lists"
+            done <<< "$NEW_ASNS" >> /tmp/asn_base.txt
+          fi
+
+          # Schritt 4: Komplette ASN.txt global deduplizieren
+          # Kommentarzeilen (# ...) bleiben erhalten, nur Zeilen mit AS-Nummern werden dedupliziert
+          # Strategie: ersten Treffer jeder AS-Nummer behalten, Rest entfernen
+          awk '
+            /^[[:space:]]*#/ { print; next }   # Kommentarzeilen direkt ausgeben
+            /AS[0-9]+/ {
+              match($0, /AS[0-9]+/)
+              asn = substr($0, RSTART, RLENGTH)
+              if (!(asn in seen)) {
+                seen[asn] = 1
+                print
+              }
+            }
+          ' /tmp/asn_base.txt > ASN.txt
+
+          FINAL=$(grep -v '^#' ASN.txt | grep -c 'AS[0-9]' || true)
+          DUPES_REMOVED=$(( $(wc -l < /tmp/asn_base.txt) - $(wc -l < ASN.txt) ))
+
+          echo ""
+          echo "=== Zusammenfassung ==="
+          echo "ASNs aus X4BNet:           $(wc -l < /tmp/new_asns.txt)"
+          echo "Bereits vorhanden:         $SKIPPED (übersprungen)"
+          echo "Neu hinzugefügt:           $NEW_COUNT"
+          echo "Globale Duplikate entfernt: $DUPES_REMOVED"
+          echo "Gesamt ASNs in ASN.txt:    $FINAL"
+          echo "========================"
+
+      - name: Cleanup
+        run: rm -f /tmp/x4bnet_raw.txt /tmp/new_asns.txt /tmp/existing_asns.txt /tmp/asn_base.txt
+
+      - name: Commit & Push if changed
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add ASN.txt
+
+          if git diff --cached --quiet; then
+            echo "Keine Änderungen – kein Commit nötig."
+          else
+            TIMESTAMP=$(date -u "+%Y-%m-%d %H:%M UTC")
+            git commit -m "chore: update ASN lists (${TIMESTAMP})"
+            git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+          fi
