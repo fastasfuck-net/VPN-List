@@ -18,37 +18,43 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Download X4BNet ASN list
+      - name: Download X4BNet ASN lists
         run: |
           echo "Downloading X4BNet datacenter ASN list..."
-
           curl -sf \
             "https://raw.githubusercontent.com/X4BNet/lists_vpn/refs/heads/main/input/datacenter/ASN.txt" \
-            --max-time 30 \
-            --retry 3 \
-            -o /tmp/x4bnet_raw.txt
+            --max-time 30 --retry 3 \
+            -o /tmp/x4bnet_datacenter.txt || echo "" > /tmp/x4bnet_datacenter.txt
 
-          echo "Downloaded $(wc -l < /tmp/x4bnet_raw.txt) lines"
+          echo "Downloading X4BNet VPN ASN list..."
+          curl -sf \
+            "https://raw.githubusercontent.com/X4BNet/lists_vpn/refs/heads/main/input/vpn/ASN.txt" \
+            --max-time 30 --retry 3 \
+            -o /tmp/x4bnet_vpn.txt || echo "" > /tmp/x4bnet_vpn.txt
 
-      - name: Parse ASNs from source
+          echo "Datacenter lines: $(wc -l < /tmp/x4bnet_datacenter.txt)"
+          echo "VPN lines:        $(wc -l < /tmp/x4bnet_vpn.txt)"
+
+      - name: Parse & merge ASNs from both sources
         run: |
-          # Kommentare entfernen, nur gültige AS-Nummern behalten, deduplizieren
-          sed 's/#.*//' /tmp/x4bnet_raw.txt \
+          # Beide Dateien zusammenführen, Kommentare entfernen, deduplizieren
+          cat /tmp/x4bnet_datacenter.txt /tmp/x4bnet_vpn.txt \
+            | sed 's/#.*//' \
             | tr -s ' \t' '\n' \
             | grep -E '^AS[0-9]+$' \
             | sort -u \
             > /tmp/new_asns.txt
 
-          echo "Unique ASNs from source: $(wc -l < /tmp/new_asns.txt)"
+          echo "Unique ASNs from both sources: $(wc -l < /tmp/new_asns.txt)"
 
-      - name: Remove old X4BNet entries & add new ones
+      - name: Remove old entries & add new ones
         run: |
           touch ASN.txt
 
           # Schritt 1: Alte github-asn-lists Einträge entfernen
           grep -v "# github-asn-lists$" ASN.txt > /tmp/asn_base.txt || true
 
-          # Schritt 2: Bestehende ASNs (manuell) für Duplikat-Check extrahieren
+          # Schritt 2: Bestehende ASNs (manuell) für Duplikat-Check
           grep -v "^#" /tmp/asn_base.txt \
             | grep -oE 'AS[0-9]+' \
             | sort -u \
@@ -57,7 +63,7 @@ jobs:
           EXISTING=$(wc -l < /tmp/existing_asns.txt)
           echo "Manual entries in ASN.txt: $EXISTING"
 
-          # Schritt 3: Nur ASNs hinzufügen die noch NICHT in der Basis sind
+          # Schritt 3: Nur ASNs die noch nicht in der Basis sind
           NEW_ASNS=$(comm -23 \
             <(sort /tmp/new_asns.txt) \
             <(sort /tmp/existing_asns.txt))
@@ -73,11 +79,9 @@ jobs:
             done <<< "$NEW_ASNS" >> /tmp/asn_base.txt
           fi
 
-          # Schritt 4: Komplette ASN.txt global deduplizieren
-          # Kommentarzeilen (# ...) bleiben erhalten, nur Zeilen mit AS-Nummern werden dedupliziert
-          # Strategie: ersten Treffer jeder AS-Nummer behalten, Rest entfernen
+          # Schritt 4: Globale Deduplizierung – erster Treffer gewinnt, Kommentarzeilen bleiben
           awk '
-            /^[[:space:]]*#/ { print; next }   # Kommentarzeilen direkt ausgeben
+            /^[[:space:]]*#/ { print; next }
             /AS[0-9]+/ {
               match($0, /AS[0-9]+/)
               asn = substr($0, RSTART, RLENGTH)
@@ -93,7 +97,7 @@ jobs:
 
           echo ""
           echo "=== Zusammenfassung ==="
-          echo "ASNs aus X4BNet:           $(wc -l < /tmp/new_asns.txt)"
+          echo "ASNs aus beiden Quellen:   $(wc -l < /tmp/new_asns.txt)"
           echo "Bereits vorhanden:         $SKIPPED (übersprungen)"
           echo "Neu hinzugefügt:           $NEW_COUNT"
           echo "Globale Duplikate entfernt: $DUPES_REMOVED"
@@ -101,7 +105,7 @@ jobs:
           echo "========================"
 
       - name: Cleanup
-        run: rm -f /tmp/x4bnet_raw.txt /tmp/new_asns.txt /tmp/existing_asns.txt /tmp/asn_base.txt
+        run: rm -f /tmp/x4bnet_datacenter.txt /tmp/x4bnet_vpn.txt /tmp/new_asns.txt /tmp/existing_asns.txt /tmp/asn_base.txt
 
       - name: Commit & Push if changed
         run: |
