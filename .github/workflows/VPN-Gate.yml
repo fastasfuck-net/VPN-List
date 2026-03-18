@@ -1,0 +1,78 @@
+name: Update VPN Gate IPs
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"   # alle 6 Stunden
+  workflow_dispatch:          # manuell auslösbar
+
+jobs:
+  update-vpngate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Download & Parse VPN Gate CSV
+        run: |
+          echo "Downloading VPN Gate server list..."
+
+          # CSV herunterladen (erste Zeile ist ein Kommentar, zweite die Header)
+          curl -s "https://www.vpngate.net/api/iphone/" \
+            --max-time 30 \
+            --retry 3 \
+            -o vpngate_raw.csv
+
+          # Zeilen ohne "*" am Anfang behalten (echter CSV-Inhalt),
+          # IP ist Spalte 2 (Index 1), nur gültige IPv4 extrahieren
+          grep -v "^\*" vpngate_raw.csv \
+            | tail -n +2 \
+            | awk -F',' '{print $2}' \
+            | grep -E '^([0-9]{1,3}\.){3}[0-9]{1,3}$' \
+            | sort -u \
+            > vpngate_ips.txt
+
+          COUNT=$(wc -l < vpngate_ips.txt)
+          echo "Extracted $COUNT IPs from VPN Gate"
+
+          if [ "$COUNT" -eq 0 ]; then
+            echo "ERROR: No IPs extracted, aborting."
+            exit 1
+          fi
+
+      - name: Merge into IP.txt
+        run: |
+          # Bestehende IP.txt laden (falls vorhanden)
+          if [ -f "IP.txt" ]; then
+            cp IP.txt ip_existing.txt
+          else
+            touch ip_existing.txt
+          fi
+
+          # Zusammenführen: bestehende + neue VPN Gate IPs, dedupliziert, sortiert
+          cat ip_existing.txt vpngate_ips.txt \
+            | grep -E '^([0-9]{1,3}\.){3}[0-9]{1,3}$' \
+            | sort -u \
+            > IP.txt
+
+          TOTAL=$(wc -l < IP.txt)
+          NEW=$(wc -l < vpngate_ips.txt)
+          echo "Total IPs in IP.txt: $TOTAL (VPN Gate: $NEW)"
+
+      - name: Cleanup temp files
+        run: rm -f vpngate_raw.csv vpngate_ips.txt ip_existing.txt
+
+      - name: Commit & Push if changed
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add IP.txt
+
+          if git diff --cached --quiet; then
+            echo "No changes to IP.txt – skipping commit."
+          else
+            TIMESTAMP=$(date -u "+%Y-%m-%d %H:%M UTC")
+            git commit -m "chore: update VPN Gate IPs (${TIMESTAMP})"
+            git push
+          fi
