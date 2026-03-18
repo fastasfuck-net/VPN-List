@@ -885,6 +885,7 @@ AS197405
 AS132203
 AS208959
 AS210731
+AS25504
 AS12200  # github-asn-lists
 AS12222  # github-asn-lists
 AS133499  # github-asn-lists
