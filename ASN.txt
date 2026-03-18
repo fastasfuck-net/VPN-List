@@ -495,7 +495,6 @@ AS42399
 AS47385
 AS40539
 AS42244
-AS10929
 AS47549
 AS200147
 AS393326
@@ -885,5 +884,113 @@ AS216063
 AS197405
 AS132203
 AS208959
-AS39351
 AS210731
+AS12200  # github-asn-lists
+AS12222  # github-asn-lists
+AS133499  # github-asn-lists
+AS13378  # github-asn-lists
+AS134351  # github-asn-lists
+AS134450  # github-asn-lists
+AS134963  # github-asn-lists
+AS135377  # github-asn-lists
+AS136988  # github-asn-lists
+AS138608  # github-asn-lists
+AS141039  # github-asn-lists
+AS141995  # github-asn-lists
+AS142036  # github-asn-lists
+AS147049  # github-asn-lists
+AS149020  # github-asn-lists
+AS14956  # github-asn-lists
+AS152390  # github-asn-lists
+AS16652  # github-asn-lists
+AS19148  # github-asn-lists
+AS198524  # github-asn-lists
+AS199785  # github-asn-lists
+AS19994  # github-asn-lists
+AS201983  # github-asn-lists
+AS202448  # github-asn-lists
+AS203758  # github-asn-lists
+AS204287  # github-asn-lists
+AS204957  # github-asn-lists
+AS206092  # github-asn-lists
+AS206216  # github-asn-lists
+AS208795  # github-asn-lists
+AS208969  # github-asn-lists
+AS210329  # github-asn-lists
+AS210779  # github-asn-lists
+AS211619  # github-asn-lists
+AS212317  # github-asn-lists
+AS212861  # github-asn-lists
+AS213230  # github-asn-lists
+AS21342  # github-asn-lists
+AS213887  # github-asn-lists
+AS214036  # github-asn-lists
+AS214574  # github-asn-lists
+AS21499  # github-asn-lists
+AS21501  # github-asn-lists
+AS215859  # github-asn-lists
+AS216071  # github-asn-lists
+AS24319  # github-asn-lists
+AS26347  # github-asn-lists
+AS26481  # github-asn-lists
+AS26548  # github-asn-lists
+AS265620  # github-asn-lists
+AS28682  # github-asn-lists
+AS29713  # github-asn-lists
+AS30836  # github-asn-lists
+AS32306  # github-asn-lists
+AS329184  # github-asn-lists
+AS33696  # github-asn-lists
+AS33905  # github-asn-lists
+AS34164  # github-asn-lists
+AS34927  # github-asn-lists
+AS35994  # github-asn-lists
+AS36007  # github-asn-lists
+AS36183  # github-asn-lists
+AS393886  # github-asn-lists
+AS39486  # github-asn-lists
+AS395954  # github-asn-lists
+AS396190  # github-asn-lists
+AS396362  # github-asn-lists
+AS396931  # github-asn-lists
+AS397373  # github-asn-lists
+AS398101  # github-asn-lists
+AS398787  # github-asn-lists
+AS399804  # github-asn-lists
+AS400754  # github-asn-lists
+AS40476  # github-asn-lists
+AS41828  # github-asn-lists
+AS42532  # github-asn-lists
+AS42675  # github-asn-lists
+AS43128  # github-asn-lists
+AS44144  # github-asn-lists
+AS44477  # github-asn-lists
+AS44803  # github-asn-lists
+AS46516  # github-asn-lists
+AS48031  # github-asn-lists
+AS48282  # github-asn-lists
+AS48894  # github-asn-lists
+AS50835  # github-asn-lists
+AS51790  # github-asn-lists
+AS51862  # github-asn-lists
+AS52000  # github-asn-lists
+AS52468  # github-asn-lists
+AS5435  # github-asn-lists
+AS56635  # github-asn-lists
+AS57433  # github-asn-lists
+AS58683  # github-asn-lists
+AS59787  # github-asn-lists
+AS60253  # github-asn-lists
+AS60362  # github-asn-lists
+AS60435  # github-asn-lists
+AS60973  # github-asn-lists
+AS61138  # github-asn-lists
+AS62838  # github-asn-lists
+AS62904  # github-asn-lists
+AS63567  # github-asn-lists
+AS64022  # github-asn-lists
+AS64249  # github-asn-lists
+AS6698  # github-asn-lists
+AS6764  # github-asn-lists
+AS7595  # github-asn-lists
+AS8849  # github-asn-lists
