@@ -10,7 +10,7 @@ This repository aggregates data from the following open-source projects.
 
 | Source | Repository | License |
 |--------|-----------|---------|
-| Free Proxy List | [proxifly/free-proxy-list](https://github.com/proxifly/free-proxy-list) | [MIT](https://github.com/proxifly/free-proxy-list/blob/main/LICENSE) |
+| Free Proxy List | [proxifly/free-proxy-list](https://github.com/proxifly/free-proxy-list) | [GPL-3.0 license](https://github.com/proxifly/free-proxy-list/blob/main/LICENSE) |
 | PROXY-List | [TheSpeedX/PROXY-List](https://github.com/TheSpeedX/PROXY-List) | No license – credits requested by author |
 | proxy-list | [monosans/proxy-list](https://github.com/monosans/proxy-list) | [MIT](https://github.com/monosans/proxy-list/blob/main/LICENSE) |
 | VPN Gate | [vpngate.net](https://www.vpngate.net) | Public API |
