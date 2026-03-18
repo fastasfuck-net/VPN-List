@@ -1,0 +1,76 @@
+name: Update Tor Exit Nodes
+
+on:
+  schedule:
+    - cron: "0 */3 * * *"   # alle 3 Stunden (Tor-Liste ändert sich häufiger)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-tor-exits:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Download Tor Exit Node List
+        run: |
+          echo "Downloading Tor exit node list..."
+
+          curl -s "https://check.torproject.org/torbulkexitlist" \
+            --max-time 30 \
+            --retry 3 \
+            -o tor_raw.txt
+
+          # Nur gültige IPv4 behalten
+          grep -E '^([0-9]{1,3}\.){3}[0-9]{1,3}$' tor_raw.txt \
+            | sort -u \
+            > tor_ips.txt
+
+          COUNT=$(wc -l < tor_ips.txt)
+          echo "Extracted $COUNT Tor exit nodes"
+
+          if [ "$COUNT" -eq 0 ]; then
+            echo "ERROR: No IPs extracted, aborting."
+            exit 1
+          fi
+
+      - name: Update IP.txt
+        run: |
+          touch IP.txt
+
+          # Alte Tor-Einträge entfernen
+          grep -v "# TorExit$" IP.txt > ip_clean.txt || true
+
+          # Neue Tor Exit Nodes mit Kommentar anhängen
+          while read -r ip; do
+            echo "$ip  # TorExit"
+          done < tor_ips.txt >> ip_clean.txt
+
+          mv ip_clean.txt IP.txt
+
+          COUNT=$(wc -l < tor_ips.txt)
+          echo "Replaced old TorExit entries with $COUNT fresh IPs"
+
+      - name: Cleanup temp files
+        run: rm -f tor_raw.txt tor_ips.txt
+
+      - name: Commit & Push if changed
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add IP.txt
+
+          if git diff --cached --quiet; then
+            echo "No changes to IP.txt – skipping commit."
+          else
+            TIMESTAMP=$(date -u "+%Y-%m-%d %H:%M UTC")
+            git commit -m "chore: update Tor exit nodes (${TIMESTAMP})"
+            git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+          fi
