@@ -9802,7 +9802,6 @@
 88.80.26.2  # TorExit
 88.80.26.3  # TorExit
 88.80.26.4  # TorExit
-89.125.57.236  # TorExit
 89.147.108.90  # TorExit
 89.147.110.118  # TorExit
 89.147.110.154  # TorExit
