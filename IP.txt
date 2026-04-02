@@ -9628,6 +9628,13 @@
 185.28.47.66  # TorExit
 185.28.47.67  # TorExit
 185.28.47.72  # TorExit
+185.28.47.77  # TorExit
+185.28.47.78  # TorExit
+185.28.47.79  # TorExit
+185.28.47.80  # TorExit
+185.28.47.82  # TorExit
+185.28.47.84  # TorExit
+185.28.47.85  # TorExit
 185.34.33.2  # TorExit
 185.35.202.222  # TorExit
 185.39.207.83  # TorExit
