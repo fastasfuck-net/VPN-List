@@ -11813,6 +11813,7 @@
 8.215.52.126  # TorExit
 80.241.60.207  # TorExit
 80.67.167.81  # TorExit
+80.67.172.162  # TorExit
 80.94.92.92  # TorExit
 80.94.92.99  # TorExit
 81.16.33.42  # TorExit
