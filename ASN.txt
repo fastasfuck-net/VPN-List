@@ -890,6 +890,7 @@ AS58087
 AS139648
 AS13194
 AS396253
+AS147019
 AS12200  # github-asn-lists
 AS12222  # github-asn-lists
 AS133499  # github-asn-lists
