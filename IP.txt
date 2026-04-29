@@ -9904,6 +9904,7 @@
 45.92.1.70  # TorExit
 45.94.31.123  # TorExit
 45.94.31.228  # TorExit
+45.94.31.244  # TorExit
 45.94.31.57  # TorExit
 45.94.31.68  # TorExit
 45.95.169.104  # TorExit
