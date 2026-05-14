@@ -10281,7 +10281,6 @@
 45.66.35.33  # TorExit
 45.66.35.34  # TorExit
 45.66.35.35  # TorExit
-45.80.158.111  # TorExit
 45.80.158.142  # TorExit
 45.80.158.143  # TorExit
 45.80.158.165  # TorExit
