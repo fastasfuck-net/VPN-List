@@ -8,6 +8,13 @@ on:
 permissions:
   contents: write
 
+# Alle Workflows die in IP.txt schreiben teilen sich diese Gruppe, damit sie
+# niemals gleichzeitig laufen. Sonst lesen zwei Jobs dieselbe IP.txt und der
+# zweite Push überschreibt den ersten -> Duplikate / Konflikte.
+concurrency:
+  group: ip-txt-update
+  cancel-in-progress: false
+
 jobs:
   update-vpngate:
     runs-on: self-hosted
@@ -46,21 +53,41 @@ jobs:
         run: |
           touch IP.txt
 
-          # Alle alten VPNGate-Zeilen entfernen (Zeilen die mit "# VPNGate" enden)
-          grep -v "# VPNGate$" IP.txt > ip_clean.txt || true
+          # 1) Alte VPNGate-Einträge entfernen -> Basis
+          grep -v "# VPNGate$" IP.txt > ip_base.txt || true
 
-          # Neue VPNGate IPs mit Kommentar anhängen
-          while read -r ip; do
-            echo "$ip  # VPNGate"
-          done < vpngate_ips.txt >> ip_clean.txt
+          # 2) Alle bereits in der Basis vorhandenen IPs (andere Quellen + manuell)
+          grep -v '^#' ip_base.txt \
+            | grep -oE '([0-9]{1,3}\.){3}[0-9]{1,3}' \
+            | sort -u \
+            > existing_ips.txt
 
-          mv ip_clean.txt IP.txt
+          # 3) Nur VPNGate-IPs anhängen, die noch von KEINER anderen Quelle stammen
+          NEW_IPS=$(comm -23 <(sort -u vpngate_ips.txt) existing_ips.txt)
+          NEW_COUNT=$(echo "$NEW_IPS" | grep -c . || true)
+          SKIPPED=$(comm -12 <(sort -u vpngate_ips.txt) existing_ips.txt | wc -l)
 
-          COUNT=$(wc -l < vpngate_ips.txt)
-          echo "Replaced old VPNGate entries with $COUNT fresh IPs"
+          if [ -n "$NEW_IPS" ] && [ "$NEW_COUNT" -gt 0 ]; then
+            while read -r ip; do
+              echo "$ip  # VPNGate"
+            done <<< "$NEW_IPS" >> ip_base.txt
+          fi
+
+          # 4) Globaler Dedup: erste Nennung einer IP gewinnt, Kommentarzeilen bleiben
+          awk '
+            /^[[:space:]]*#/ { print; next }
+            match($0, /[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+/) {
+              ip = substr($0, RSTART, RLENGTH)
+              if (!(ip in seen)) { seen[ip] = 1; print }
+              next
+            }
+            { print }
+          ' ip_base.txt > IP.txt
+
+          echo "VPNGate: $NEW_COUNT neu, $SKIPPED bereits vorhanden (übersprungen)"
 
       - name: Cleanup temp files
-        run: rm -f vpngate_raw.csv vpngate_ips.txt
+        run: rm -f vpngate_raw.csv vpngate_ips.txt ip_base.txt existing_ips.txt
 
       - name: Commit & Push if changed
         run: |

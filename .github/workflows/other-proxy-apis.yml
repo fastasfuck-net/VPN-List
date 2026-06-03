@@ -8,6 +8,13 @@ on:
 permissions:
   contents: write
 
+# Alle Workflows die in IP.txt schreiben teilen sich diese Gruppe, damit sie
+# niemals gleichzeitig laufen. Sonst lesen zwei Jobs dieselbe IP.txt und der
+# zweite Push überschreibt den ersten -> Duplikate / Konflikte.
+concurrency:
+  group: ip-txt-update
+  cancel-in-progress: false
+
 jobs:
   update-proxies:
     runs-on: self-hosted
@@ -101,7 +108,17 @@ jobs:
             done <<< "$NEW_IPS" >> /tmp/ip_clean.txt
           fi
 
-          mv /tmp/ip_clean.txt IP.txt
+          # Globaler Dedup: erste Nennung einer IP gewinnt, Kommentarzeilen bleiben.
+          # Sicherheitsnetz, falls die Quelldatei bereits Altlast-Duplikate enthält.
+          awk '
+            /^[[:space:]]*#/ { print; next }
+            match($0, /[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+/) {
+              ip = substr($0, RSTART, RLENGTH)
+              if (!(ip in seen)) { seen[ip] = 1; print }
+              next
+            }
+            { print }
+          ' /tmp/ip_clean.txt > IP.txt
 
           # --- Duplikat-Report ---
           DUPLICATES_FOUND=$(comm -12 \
