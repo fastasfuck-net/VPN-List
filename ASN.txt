@@ -931,6 +931,7 @@ AS134450  # github-asn-lists
 AS134963  # github-asn-lists
 AS135377  # github-asn-lists
 AS136988  # github-asn-lists
+AS137373  # github-asn-lists
 AS138608  # github-asn-lists
 AS141039  # github-asn-lists
 AS141995  # github-asn-lists
@@ -940,6 +941,7 @@ AS149020  # github-asn-lists
 AS152390  # github-asn-lists
 AS16652  # github-asn-lists
 AS19148  # github-asn-lists
+AS197450  # github-asn-lists
 AS198524  # github-asn-lists
 AS198571  # github-asn-lists
 AS199785  # github-asn-lists
