@@ -9851,6 +9851,7 @@
 45.129.8.100  # TorExit
 45.13.225.69  # TorExit
 45.13.225.78  # TorExit
+45.133.73.14  # TorExit
 45.133.73.184  # TorExit
 45.133.73.35  # TorExit
 45.133.73.6  # TorExit
