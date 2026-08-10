@@ -8820,6 +8820,7 @@
 144.126.147.123  # TorExit
 144.6.236.131  # TorExit
 146.59.231.4  # TorExit
+147.161.3.31  # TorExit
 147.161.3.33  # TorExit
 147.90.234.115  # TorExit
 147.90.234.116  # TorExit
@@ -9965,11 +9966,8 @@
 77.81.247.72  # TorExit
 77.90.185.93  # TorExit
 78.17.212.143  # TorExit
-78.17.212.153  # TorExit
 78.17.213.101  # TorExit
 78.17.213.22  # TorExit
-78.17.70.211  # TorExit
-78.17.71.33  # TorExit
 78.17.93.172  # TorExit
 8.211.148.167  # TorExit
 8.215.52.126  # TorExit
@@ -10022,8 +10020,6 @@
 88.80.26.3  # TorExit
 88.80.26.4  # TorExit
 89.125.209.146  # TorExit
-89.125.50.241  # TorExit
-89.125.66.96  # TorExit
 89.126.230.28  # TorExit
 89.126.230.29  # TorExit
 89.126.230.32  # TorExit
