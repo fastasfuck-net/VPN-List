@@ -8,6 +8,11 @@ on:
 permissions:
   contents: write
 
+# Serialisiert ASN.txt-Läufe, damit sich parallele Runs nicht überschreiben.
+concurrency:
+  group: asn-txt-update
+  cancel-in-progress: false
+
 jobs:
   update-asn:
     runs-on: self-hosted

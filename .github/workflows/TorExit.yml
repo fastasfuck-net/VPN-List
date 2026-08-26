@@ -8,6 +8,13 @@ on:
 permissions:
   contents: write
 
+# Alle Workflows die in IP.txt schreiben teilen sich diese Gruppe, damit sie
+# niemals gleichzeitig laufen. Sonst lesen zwei Jobs dieselbe IP.txt und der
+# zweite Push überschreibt den ersten -> Duplikate / Konflikte.
+concurrency:
+  group: ip-txt-update
+  cancel-in-progress: false
+
 jobs:
   update-tor-exits:
     runs-on: self-hosted
@@ -44,21 +51,41 @@ jobs:
         run: |
           touch IP.txt
 
-          # Alte Tor-Einträge entfernen
-          grep -v "# TorExit$" IP.txt > ip_clean.txt || true
+          # 1) Alte TorExit-Einträge entfernen -> Basis
+          grep -v "# TorExit$" IP.txt > ip_base.txt || true
 
-          # Neue Tor Exit Nodes mit Kommentar anhängen
-          while read -r ip; do
-            echo "$ip  # TorExit"
-          done < tor_ips.txt >> ip_clean.txt
+          # 2) Alle bereits in der Basis vorhandenen IPs (andere Quellen + manuell)
+          grep -v '^#' ip_base.txt \
+            | grep -oE '([0-9]{1,3}\.){3}[0-9]{1,3}' \
+            | sort -u \
+            > existing_ips.txt
 
-          mv ip_clean.txt IP.txt
+          # 3) Nur Tor-IPs anhängen, die noch von KEINER anderen Quelle stammen
+          NEW_IPS=$(comm -23 <(sort -u tor_ips.txt) existing_ips.txt)
+          NEW_COUNT=$(echo "$NEW_IPS" | grep -c . || true)
+          SKIPPED=$(comm -12 <(sort -u tor_ips.txt) existing_ips.txt | wc -l)
 
-          COUNT=$(wc -l < tor_ips.txt)
-          echo "Replaced old TorExit entries with $COUNT fresh IPs"
+          if [ -n "$NEW_IPS" ] && [ "$NEW_COUNT" -gt 0 ]; then
+            while read -r ip; do
+              echo "$ip  # TorExit"
+            done <<< "$NEW_IPS" >> ip_base.txt
+          fi
+
+          # 4) Globaler Dedup: erste Nennung einer IP gewinnt, Kommentarzeilen bleiben
+          awk '
+            /^[[:space:]]*#/ { print; next }
+            match($0, /[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+/) {
+              ip = substr($0, RSTART, RLENGTH)
+              if (!(ip in seen)) { seen[ip] = 1; print }
+              next
+            }
+            { print }
+          ' ip_base.txt > IP.txt
+
+          echo "TorExit: $NEW_COUNT neu, $SKIPPED bereits vorhanden (übersprungen)"
 
       - name: Cleanup temp files
-        run: rm -f tor_raw.txt tor_ips.txt
+        run: rm -f tor_raw.txt tor_ips.txt ip_base.txt existing_ips.txt
 
       - name: Commit & Push if changed
         run: |
