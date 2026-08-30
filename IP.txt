@@ -9936,6 +9936,7 @@
 31.22.91.203  # TorExit
 31.25.11.143  # TorExit
 31.40.204.151  # TorExit
+31.58.216.18  # TorExit
 35.0.127.52  # TorExit
 37.114.50.124  # TorExit
 37.114.50.142  # TorExit
